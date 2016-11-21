@@ -8,6 +8,14 @@ struct Board {
 }
 
 impl Board {
+    fn new(board: &Board) -> Board {
+        return Board {
+            width: board.width,
+            height: board.height,
+            queens: board.queens.to_vec()
+        }
+    }
+
     fn display(&self) {
         let mut squares = vec![vec![false; self.height]; self.width];
 
@@ -25,6 +33,44 @@ impl Board {
                 }
             }
             println!("{}", line);
+        }
+    }
+}
+
+struct BoardGenerator {
+    initial_board: Board,
+    i: usize,
+    j: usize
+}
+
+impl BoardGenerator {
+    fn from(board: Board) -> BoardGenerator {
+        return BoardGenerator {
+            initial_board: board,
+            i: 0,
+            j: 0
+        }
+    }
+
+    fn next(&mut self) -> Option<Board> {
+        self.j += 1;
+
+        if self.j >= self.initial_board.height {
+            self.i += 1;
+            self.j = 0;
+        }
+
+        if self.i >= self.initial_board.width {
+            return None;
+        }
+
+        match self.initial_board.queens.binary_search(&(self.i, self.j)) {
+            Ok(_) => return self.next(),
+            Err(idx) => {
+                let mut next_board = Board::new(&self.initial_board);
+                next_board.queens.insert(idx, (self.i, self.j));
+                return Some(next_board);
+            }
         }
     }
 }
@@ -56,16 +102,25 @@ fn correct(board : &Board, queen_number: usize) -> bool {
     }
 }
 
-fn followup(board : &Board) -> Vec<Board> {
-    return vec![];
-}
+fn backtrack(board : Board, queen_requirement: usize) -> Option<Board> {
+    if incorrect(&board) { return None; }
+    if correct(&board, queen_requirement) { return Some(board) }
 
-fn backtrack(board : &Board) {
+    let mut generator = BoardGenerator::from(board);
+    while let Some(next_board) = generator.next() {
+        if let Some(solution) = backtrack(next_board, queen_requirement) {
+            return Some(solution);
+        }
+    }
 
+    return None;
 }
 
 fn main() {
-    let queens = vec![(1, 1), (2, 3)];
-    let board = Board { width: 8, height: 8, queens: queens };
-    board.display();
+    let board = Board { width: 8, height: 8, queens: vec![] };
+    if let Some(solution) = backtrack(board, 8) {
+        solution.display();
+    } else {
+        println!("No solution found.")
+    }
 }
