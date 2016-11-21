@@ -1,29 +1,27 @@
+use std::cmp::max;
+use std::cmp::min;
+
 struct Board {
-    square: [[bool; 8]; 8],
-    queen_number: i8
+    width: usize,
+    height: usize,
+    queens: Vec<(usize, usize)>
 }
 
 impl Board {
-    fn new(queens: &[(usize, usize)]) -> Board {
-        let mut board = Board {
-            square: [[false; 8]; 8],
-            queen_number: 0
-        };
-
-        for &(i, j) in queens {
-            board.square[i][j] = true;
-            board.queen_number += 1;
-        }
-        return board;
-    }
-
     fn display(&self) {
-        for row in self.square.into_iter() {
+        let mut squares = vec![vec![false; self.height]; self.width];
+
+        for queen in &self.queens {
+            let &(qi, qj) = queen;
+            squares[qi][qj] = true;
+        }
+
+        for row in squares {
             let mut line = String::from("");
-            for square in row.iter() {
+            for square in row {
                 match square {
-                    &true => line += "Q ",
-                    &false => line += ". "
+                    true => line += "Q ",
+                    false => line += ". "
                 }
             }
             println!("{}", line);
@@ -31,8 +29,43 @@ impl Board {
     }
 }
 
+fn incorrect(board : &Board) -> bool {
+    for queen in &board.queens {
+        let &(qi, qj) = queen;
+        for other_queen in &board.queens {
+            let &(oi, oj) = other_queen;
+            let h_diff = max(oi, qi) - min(oi, qi);
+            let v_diff = max(oj, qj) - min(oj, qj);
+
+            if oi == qi && oj == qj {
+                continue;
+            } else if oi == qi || oj == qj || h_diff == v_diff {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+fn correct(board : &Board, queen_number: usize) -> bool {
+    if board.queens.len() == queen_number {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+fn followup(board : &Board) -> Vec<Board> {
+    return vec![];
+}
+
+fn backtrack(board : &Board) {
+
+}
+
 fn main() {
-    let queens : Vec<(usize, usize)> = vec![(1, 1), (2, 2)];
-    let board = Board::new(&queens);
+    let queens = vec![(1, 1), (2, 3)];
+    let board = Board { width: 8, height: 8, queens: queens };
     board.display();
 }
